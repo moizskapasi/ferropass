@@ -15,7 +15,7 @@ FerroPass is a secure, command-line password manager built in Rust. It offers ro
 
 ### Prerequisites
 
-- Rust and Cargo (1.74.0 or later recommended)
+- Rust and Cargo (1.86.0 or later recommended)
 
 ### Building from Source
 
