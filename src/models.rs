@@ -91,7 +91,6 @@ impl Database {
     }
 }
 
-// Generate a random 32-bit hash ID as a string
 fn generate_id() -> String {
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -105,6 +104,5 @@ fn generate_id() -> String {
     hasher.input_str(&format!("{}{}", timestamp, random_number));
     let result = hasher.result_str();
     
-    // Take first 8 characters as our 32-bit hash
     result[..8].to_string()
 }

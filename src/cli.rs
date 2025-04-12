@@ -69,7 +69,6 @@ impl CLI {
                 }
             }
             
-            // If we have a database loaded, show the database menu
             if self.current_database.is_some() {
                 self.database_menu()?;
             }
@@ -86,24 +85,19 @@ impl CLI {
         let mut filepath = PathBuf::from(&db_name);
         filepath.set_extension("fp");
         
-        // Check if file already exists
         if filepath.exists() {
             println!("A database with this name already exists. Please choose a different name.");
             return Ok(());
         }
         
-        // Prompt for passkey
         let passkey = self.prompt_for_valid_passkey()?;
         
-        // Create new database
         let database = Database::new();
         
-        // Save the database
         encrypt_and_save_database(&database, &filepath, &passkey)?;
         
         println!("Database created successfully!");
         
-        // Set as current database
         self.current_database_path = Some(filepath);
         self.current_database = Some(database);
         
@@ -125,7 +119,6 @@ impl CLI {
         
         let passkey = Self::prompt_password("Enter database passkey: ")?;
         
-        // Check if passkey is empty
         if passkey.is_empty() {
             println!("Passkey cannot be empty.");
             Self::prompt_input("Press Enter to continue...")?;
@@ -173,8 +166,6 @@ impl CLI {
                 }
             }
             
-            // Don't ask for passkey after each operation
-            // Only save when creating/deleting accounts, which handle their own saves
         }
         
         Ok(())
@@ -217,7 +208,6 @@ impl CLI {
         Self::clear_screen()?;
         println!("=== View/Edit Account ===");
         
-        // Display the list of accounts first
         if let Some(db) = &self.current_database {
             let accounts = db.get_accounts();
             
@@ -269,7 +259,6 @@ impl CLI {
         loop {
             Self::clear_screen()?;
             
-            // Get the account
             let account = if let Some(db) = &self.current_database {
                 if let Some(acc) = db.get_account_by_id(account_id) {
                     acc.clone()
@@ -316,23 +305,19 @@ impl CLI {
         
         let passkey = Self::prompt_password("Enter database passkey: ")?;
         
-        // Check if passkey is empty
         if passkey.is_empty() {
             println!("Passkey cannot be empty.");
             Self::prompt_input("Press Enter to continue...")?;
             return Ok(());
         }
         
-        // Verify passkey
         if let Some(path) = &self.current_database_path {
-            // Try to decrypt the database with the provided passkey
             if load_and_decrypt_database(path, &passkey).is_err() {
                 println!("Invalid passkey. Changes not made.");
                 Self::prompt_input("Press Enter to continue...")?;
                 return Ok(());
             }
             
-            // Passkey is verified, proceed with editing
             if let Some(db) = &mut self.current_database {
                 if let Some(account) = db.get_account_by_id_mut(account_id) {
                     println!("Current Username/Email: {}", account.get_username_or_email());
@@ -389,7 +374,6 @@ impl CLI {
                     
                     println!("Account updated successfully!");
                     
-                    // Save changes
                     encrypt_and_save_database(db, path, &passkey)?;
                     println!("Changes saved successfully!");
                 } else {
@@ -412,23 +396,19 @@ impl CLI {
         
         let passkey = Self::prompt_password("Enter database passkey: ")?;
         
-        // Check if passkey is empty
         if passkey.is_empty() {
             println!("Passkey cannot be empty.");
             Self::prompt_input("Press Enter to continue...")?;
             return Ok(());
         }
         
-        // Verify passkey
         if let Some(path) = &self.current_database_path {
-            // Try to decrypt the database with the provided passkey
             if load_and_decrypt_database(path, &passkey).is_err() {
                 println!("Invalid passkey. Password not copied.");
                 Self::prompt_input("Press Enter to continue...")?;
                 return Ok(());
             }
             
-            // Passkey is verified, proceed with copying
             if let Some(db) = &self.current_database {
                 if let Some(account) = db.get_account_by_id(account_id) {
                     copy_to_clipboard(account.get_password())?;
@@ -453,23 +433,19 @@ impl CLI {
         
         let passkey = Self::prompt_password("Enter database passkey: ")?;
         
-        // Check if passkey is empty
         if passkey.is_empty() {
             println!("Passkey cannot be empty.");
             Self::prompt_input("Press Enter to continue...")?;
             return Ok(());
         }
         
-        // Verify passkey
         if let Some(path) = &self.current_database_path {
-            // Try to decrypt the database with the provided passkey
             if load_and_decrypt_database(path, &passkey).is_err() {
                 println!("Invalid passkey. Password not generated.");
                 Self::prompt_input("Press Enter to continue...")?;
                 return Ok(());
             }
             
-            // Passkey is verified, proceed with generating
             if let Some(db) = &mut self.current_database {
                 if let Some(account) = db.get_account_by_id_mut(account_id) {
                     let new_password = generate_random_password();
@@ -481,7 +457,6 @@ impl CLI {
                         account.set_password(new_password);
                         println!("Password updated successfully!");
                         
-                        // Save the database
                         encrypt_and_save_database(db, path, &passkey)?;
                         println!("Changes saved successfully!");
                     } else {
@@ -505,7 +480,6 @@ impl CLI {
         Self::clear_screen()?;
         println!("=== Add New Account ===");
         
-        // Get account information
         let username = Self::prompt_input("Enter Username/Email: ")?;
         
         if username.is_empty() {
@@ -517,7 +491,6 @@ impl CLI {
         let description = Self::prompt_input("Enter Description (optional): ")?;
         let description = if description.is_empty() { None } else { Some(description) };
         
-        // Get password
         let password_choice = Self::prompt_input("Do you want to (1) enter your own password or (2) generate a random one? (1/2): ")?;
         
         let password = if password_choice == "1" {
@@ -546,30 +519,25 @@ impl CLI {
             pwd
         };
         
-        // Get database passkey before adding the account
         if let Some(db) = &mut self.current_database {
             if let Some(path) = &self.current_database_path {
                 let passkey = Self::prompt_password("Enter database passkey to save changes: ")?;
                 
-                // Check if passkey is empty
                 if passkey.is_empty() {
                     println!("Passkey cannot be empty.");
                     Self::prompt_input("Press Enter to continue...")?;
                     return Ok(());
                 }
                 
-                // Verify passkey by trying to open the database
                 if load_and_decrypt_database(path, &passkey).is_err() {
                     println!("Invalid passkey. Account not created.");
                     Self::prompt_input("Press Enter to continue...")?;
                     return Ok(());
                 }
                 
-                // Passkey is correct, create and add the new account
                 let account = Account::new(username, description, password);
                 db.add_account(account);
                 
-                // Save the database
                 encrypt_and_save_database(db, path, &passkey)?;
                 println!("Account added successfully!");
                 println!("Changes saved successfully!");
@@ -588,7 +556,6 @@ impl CLI {
         Self::clear_screen()?;
         println!("=== Delete Account ===");
         
-        // Display the list of accounts first
         if let Some(db) = &self.current_database {
             let accounts = db.get_accounts();
             
@@ -621,7 +588,6 @@ impl CLI {
         
         let account_id = Self::prompt_input("Enter account ID to delete: ")?;
         
-        // Verify that account exists
         if let Some(db) = &self.current_database {
             if db.get_account_by_id(&account_id).is_none() {
                 println!("Account not found.");
@@ -634,10 +600,8 @@ impl CLI {
             return Ok(());
         }
         
-        // Verify passkey before deletion
         let passkey = Self::prompt_password("Enter database passkey: ")?;
         
-        // Check if passkey is empty
         if passkey.is_empty() {
             println!("Passkey cannot be empty.");
             Self::prompt_input("Press Enter to continue...")?;
@@ -645,14 +609,12 @@ impl CLI {
         }
         
         if let Some(path) = &self.current_database_path {
-            // Try to decrypt the database with the provided passkey
             if load_and_decrypt_database(path, &passkey).is_err() {
                 println!("Invalid passkey. Deletion cancelled.");
                 Self::prompt_input("Press Enter to continue...")?;
                 return Ok(());
             }
             
-            // Passkey is verified, proceed with deletion
             let confirm = Self::prompt_input("Are you sure you want to delete this account? (y/n): ")?;
             
             if confirm.to_lowercase() == "y" {
@@ -660,7 +622,6 @@ impl CLI {
                     if db.remove_account(&account_id) {
                         println!("Account deleted successfully!");
                         
-                        // Save the database after deletion
                         encrypt_and_save_database(db, path, &passkey)?;
                         println!("Changes saved successfully!");
                     } else {
@@ -684,7 +645,6 @@ impl CLI {
         loop {
             let passkey = Self::prompt_password("Enter database passkey (min. 15 chars, must include uppercase, lowercase, number, and special character): ")?;
             
-            // Check if passkey is empty
             if passkey.is_empty() {
                 println!("Passkey cannot be empty.");
                 continue;
@@ -693,7 +653,6 @@ impl CLI {
             if is_password_valid(&passkey) {
                 let confirm_passkey = Self::prompt_password("Confirm passkey: ")?;
                 
-                // Check if confirm passkey is empty
                 if confirm_passkey.is_empty() {
                     println!("Confirmation passkey cannot be empty.");
                     continue;

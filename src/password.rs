@@ -9,16 +9,13 @@ const NUMBERS: &str = "0123456789";
 pub fn generate_random_password() -> String {
     let mut rng = thread_rng();
     
-    // Generate a password with 20 characters, containing at least one of each required type
     let mut password = String::with_capacity(20);
     
-    // Add at least one of each required character type
     password.push(SPECIAL_CHARS.chars().nth(rng.gen_range(0..SPECIAL_CHARS.len())).unwrap());
     password.push(LOWERCASE_CHARS.chars().nth(rng.gen_range(0..LOWERCASE_CHARS.len())).unwrap());
     password.push(UPPERCASE_CHARS.chars().nth(rng.gen_range(0..UPPERCASE_CHARS.len())).unwrap());
     password.push(NUMBERS.chars().nth(rng.gen_range(0..NUMBERS.len())).unwrap());
     
-    // Add additional random characters to reach 20 total
     let all_chars = format!("{}{}{}{}", SPECIAL_CHARS, LOWERCASE_CHARS, UPPERCASE_CHARS, NUMBERS);
     
     for _ in 0..16 {
@@ -26,7 +23,6 @@ pub fn generate_random_password() -> String {
         password.push(all_chars.chars().nth(idx).unwrap());
     }
     
-    // Shuffle the password to make it more random
     let mut password_chars: Vec<char> = password.chars().collect();
     password_chars.shuffle(&mut rng);
     
